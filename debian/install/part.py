@@ -228,61 +228,40 @@ fcntl.ioctl(fdloop, fcntl.LOOP_SET_STATUS64, bytes(lpinfo))
 os.close(fdfile)
 os.close(fdloop)
 
+def quiet():
+  fdin, fdout = os.open('/dev/null', os.O_WRONLY), os.open('/dev/null', os.O_RDONLY)
+  assert fdin > -1 and fdout > -1
+  os.dup2(fdin, 0)
+  os.dup2(fdout, 1)
+  os.dup2(fdout, 2)
+  os.close(fdin)
+  os.close(fdout)
+
 if 'bios' == boot:
   if 0 == os.fork():
-    fdin, fdout = os.open('/dev/null', os.O_WRONLY), os.open('/dev/null', os.O_RDONLY)
-    assert fdin > -1 and fdout > -1
-    os.dup2(fdin, 0)
-    os.dup2(fdout, 1)
-    os.dup2(fdout, 2)
-    os.close(fdin)
-    os.close(fdout)
+    quiet()
     os.execv('/usr/bin/env', ['env', 'mkfs.ext4', '/dev/loop' + str(loopid) + 'p1'])
     exit(-1)
   assert 0 == os.wait()[1]
 elif 'uefi' == boot:
   if 0 == os.fork():
-    fdin, fdout = os.open('/dev/null', os.O_WRONLY), os.open('/dev/null', os.O_RDONLY)
-    assert fdin > -1 and fdout > -1
-    os.dup2(fdin, 0)
-    os.dup2(fdout, 1)
-    os.dup2(fdout, 2)
-    os.close(fdin)
-    os.close(fdout)
+    quiet()
     os.execv('/usr/bin/env', ['env', 'mkfs.vfat', '-F', '32', '/dev/loop' + str(loopid) + 'p1'])
     exit(-1)
   assert 0 == os.wait()[1]
   if 0 == os.fork():
-    fdin, fdout = os.open('/dev/null', os.O_WRONLY), os.open('/dev/null', os.O_RDONLY)
-    assert fdin > -1 and fdout > -1
-    os.dup2(fdin, 0)
-    os.dup2(fdout, 1)
-    os.dup2(fdout, 2)
-    os.close(fdin)
-    os.close(fdout)
+    quiet()
     os.execv('/usr/bin/env', ['env', 'mkfs.ext4', '/dev/loop' + str(loopid) + 'p2'])
     exit(-1)
   assert 0 == os.wait()[1]
 elif 'both' == boot:
   if 0 == os.fork():
-    fdin, fdout = os.open('/dev/null', os.O_WRONLY), os.open('/dev/null', os.O_RDONLY)
-    assert fdin > -1 and fdout > -1
-    os.dup2(fdin, 0)
-    os.dup2(fdout, 1)
-    os.dup2(fdout, 2)
-    os.close(fdin)
-    os.close(fdout)
+    quiet()
     os.execv('/usr/bin/env', ['env', 'mkfs.vfat', '-F', '32', '/dev/loop' + str(loopid) + 'p2'])
     exit(-1)
   assert 0 == os.wait()[1]
   if 0 == os.fork():
-    fdin, fdout = os.open('/dev/null', os.O_WRONLY), os.open('/dev/null', os.O_RDONLY)
-    assert fdin > -1 and fdout > -1
-    os.dup2(fdin, 0)
-    os.dup2(fdout, 1)
-    os.dup2(fdout, 2)
-    os.close(fdin)
-    os.close(fdout)
+    quiet()
     os.execv('/usr/bin/env', ['env', 'mkfs.ext4', '/dev/loop' + str(loopid) + 'p3'])
     exit(-1)
   assert 0 == os.wait()[1]
