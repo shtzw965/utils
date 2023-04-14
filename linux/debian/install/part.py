@@ -218,6 +218,7 @@ os.close(fd)
 fdcntl = os.open('/dev/loop-control', os.O_RDWR | os.O_CLOEXEC)
 loopid = fcntl.ioctl(fdcntl, fcntl.LOOP_CTL_GET_FREE)
 os.close(fdcntl)
+assert loopid > -1
 
 fdfile = os.open(sys.argv[1], os.O_RDWR | os.O_CLOEXEC)
 fdloop = os.open('/dev/loop' + str(loopid), os.O_RDWR | os.O_CLOEXEC)
