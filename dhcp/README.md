@@ -1,4 +1,4 @@
-simple dhcp server, providing ip address according the mac address
+simple dhcp server, providing ip address according to the mac address
 
 usage:
 
