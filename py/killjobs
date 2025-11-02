@@ -1,0 +1,35 @@
+#!/bin/python3
+import os, time, getpass, signal, sys
+from pythonlsf import lsf
+USER = getpass.getuser()
+assert 0 == lsf.lsb_init('test')
+pwd = os.getcwd()
+skip = '-s' in sys.argv
+while True:
+  jobids = []
+  jobnum = lsf.lsb_openjobinfo(0, '', USER, '', '', 0x2000)
+  for i in range(jobnum):
+    int_ptr = lsf.new_intp()
+    lsf.intp_assign(int_ptr, i)
+    job_info = lsf.lsb_readjobinfo(int_ptr)
+    if job_info.subcwd == pwd or job_info.subcwd.startswith(pwd + '/'):
+      print(job_info.jobId, job_info.jName, job_info.subcwd)
+      jobids.append(job_info.jobId)
+  lsf.lsb_closejobinfo()
+  if len(jobids) == 0:
+    break
+  if skip:
+    break
+  signalbulkjobs = lsf.signalBulkJobs()
+  signalbulkjobs.signal = 9
+  signalbulkjobs.njobs = len(jobids)
+  signalbulkjobs.jobs = lsf.new_LS_LONG_INTArray(len(jobids))
+  for i in range(len(jobids)):
+    lsf.LS_LONG_INTArray_setitem(signalbulkjobs.jobs, i, jobids[i])
+  #signalbulkjobs.flags = 0
+  #signalbulkjobs.numkvs = 0
+  #signalbulkjobs.kvs = None
+  print('killing', ' '.join([str(i) for i in jobids]))
+  result = lsf.lsb_killbulkjobs(signalbulkjobs)
+  print(result)
+  time.sleep(2)
