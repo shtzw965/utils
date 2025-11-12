@@ -23,7 +23,7 @@ if 0 != r:
   raise OSError(e, os.strerror(e))
 
 os.execvp('csh', ['csh'])
-# mount -t overlay overlay -o rw,lowerdir=lower,upperdir=rw,workdir=wk nbif2_0_main
+# mount -t overlay overlay -o rw,lowerdir=lower,upperdir=rw,workdir=wk tagert
 # unshare --mount --user --map-root-user bash
 # unshare --mount --user --map-root-user --propagation private bash
 # --propagation slave|shared|private
