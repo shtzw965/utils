@@ -126,17 +126,10 @@ class AES:
       k += n
     self.RoundKeys = [[list(k[i + x:i + x + 4]) for x in range(0, 0x10, 4)] for i in range(0, len(k), 0x10)][:(l >> 2) + 7]
     return self
-  def settext(self, text = None):
-    if None == text:
-      for i in range(4):
-        for j in range(4):
-          self.state[i][j] = 0
-    elif 0x10 == len(text):
-      for i in range(4):
-        for j in range(4):
-          self.state[i][j] = text[i * 4 + j]
-    else:
-      raise
+  def settext(self, text = bytes(0x10)):
+    for i in range(4):
+      for j in range(4):
+        self.state[i][j] = text[i * 4 + j]
     return self
   def encrypt(self, text):
     self.settext(text)
