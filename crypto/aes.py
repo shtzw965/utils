@@ -159,8 +159,7 @@ class AES:
     assert '00112233445566778899aabbccddeeff' == AES().setkey(bytes.fromhex('000102030405060708090a0b0c0d0e0f1011121314151617')).decrypt(bytes.fromhex('dda97ca4864cdfe06eaf70a0ec0d7191')).hex()
     assert '8ea2b7ca516745bfeafc49904b496089' == AES().setkey(bytes.fromhex('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')).encrypt(bytes.fromhex('00112233445566778899aabbccddeeff')).hex()
     assert '00112233445566778899aabbccddeeff' == AES().setkey(bytes.fromhex('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')).decrypt(bytes.fromhex('8ea2b7ca516745bfeafc49904b496089')).hex()
-    assert b'\x13\x17\xb8h\x0fgFh\x90\xad@ 3\x7f\xa8\xdc\xf9fp\x8c\\c\xc8\xc8[EC\x7f\xc3\xb6g\xc49\xa9\xad\xd8\xb4\xfd\xa2\n\x1av\xb9d5wy\xc6!\t!\x7f\xb9(\x8e\x11\x009\x81\xf3\xa3\xf5\xfb\xf2Z/\xc3\xf3\x08\n\x136\xb9\xcd\x13\xa0\xd5O\xe5g0#X\xcfzg\x95\xff\xff\x96\xeb\xa3\xbfT$Z=r9' == AES().setkey(bytes(32)).CTR(b"I\x1e\xb4e\xff\x08Yk\xf7\xc1\xe4s\xdeQ\xba>\x82\x98\xed\x0b0\x0e\xab\t\x8bp\x99\xf0!\xaa'Y\x95scX\xcc^\x89\x10\x02]C-\xb2\xbdj\x81\xfd\x9c\xe1\x07\x1bh\x07\x98\xadq#\xe71q\xdbu\t I\x08\xcfO%\x8f\x10\xae\xa7Q\x11\x84\x96\xec\xfe\x84\x18\xf27\x07\xfe\x91\xf8\xd8.p\x05\xa7\xb9BO\x12:", b'\xff' * 15 + b'\xfd')
-    return True
+    assert bytes.fromhex('1317b8680f67466890ad4020337fa8dcf966708c5c63c8c85b45437fc3b667c439a9add8b4fda20a1a76b964357779c62109217fb9288e11003981f3a3f5fbf25a2fc3f3080a1336b9cd13a0d54fe567302358cf7a6795ffff96eba3bf54245a3d7239') == AES().setkey(bytes(32)).CTR(bytes.fromhex('491eb465ff08596bf7c1e473de51ba3e8298ed0b300eab098b7099f021aa275995736358cc5e8910025d432db2bd6a81fd9ce1071b680798ad7123e73171db7509204908cf4f258f10aea751118496ecfe8418f23707fe91f8d82e7005a7b9424f123a') , b'\xff' * 15 + b'\xfd')    return True
   def CTR(self, text, iv = 0):
     if bytes == type(iv):
       iv = int.from_bytes(iv, 'big')
