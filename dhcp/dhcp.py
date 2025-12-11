@@ -37,12 +37,12 @@ for arg in sys.argv[1:]:
       subnet, gate = value.split(',', 1)
       opts.insert(0, (121, route(subnet) + socket.inet_aton(gate)))
 
-assert not None == interface
+assert interface is not None
 libc = ctypes.CDLL(None, 0, None, True)
 libc.mount.argtypes, libc.mount.restype = [c_void_p, c_void_p, c_void_p, c_ulong, c_void_p], c_int
 libc.umount2.argtypes, libc.umount2.restype = [c_void_p, c_int], c_int
 
-if not None == namespace:
+if namespace is not None:
   fd = os.open(b'/run/netns/' + namespace, os.O_RDONLY)
   os.setns(fd, os.CLONE_NEWNET)
   os.close(fd)
