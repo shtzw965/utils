@@ -1,13 +1,10 @@
 #!/usr/bin/python3
 import ctypes, dpkt, fcntl, os, socket, sys
 from ctypes import c_int, c_void_p, c_size_t, c_ulong, c_uint32, c_uint64, c_ushort, c_byte
-socket.IP_PKTINFO = 8
 socket.IP_MTU_DISCOVER = 10
 namespace = None
 interface = None
 
-CLONE_NEWNET = 0x40000000
-CLONE_NEWNS = 0x20000
 MS_REC = 16384
 MS_SLAVE = 1 << 19
 MNT_DETACH = 2
@@ -42,16 +39,14 @@ for arg in sys.argv[1:]:
 
 assert not None == interface
 libc = ctypes.CDLL(None, 0, None, True)
-libc.setns.argtypes, libc.setns.restype = [c_int, c_int], c_int
-libc.unshare.argtypes, libc.unshare.restype = [c_int], c_int
 libc.mount.argtypes, libc.mount.restype = [c_void_p, c_void_p, c_void_p, c_ulong, c_void_p], c_int
 libc.umount2.argtypes, libc.umount2.restype = [c_void_p, c_int], c_int
 
 if not None == namespace:
   fd = os.open(b'/run/netns/' + namespace, os.O_RDONLY)
-  assert 0 == libc.setns(fd, CLONE_NEWNET)
+  os.setns(fd, os.CLONE_NEWNET)
   os.close(fd)
-  assert 0 == libc.unshare(CLONE_NEWNS)
+  os.unshare(os.CLONE_NEWNS)
   assert 0 == libc.mount(b'', b'/', b'none', MS_REC | MS_SLAVE, 0)
   assert 0 == libc.umount2(b'/sys', MNT_DETACH)
   assert 0 == libc.mount(namespace, b'/sys', b'sysfs', 0, 0)
