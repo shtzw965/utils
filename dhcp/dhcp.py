@@ -47,7 +47,7 @@ if namespace is not None:
   os.setns(fd, os.CLONE_NEWNET)
   os.close(fd)
   os.unshare(os.CLONE_NEWNS)
-  assert 0 == libc.mount(b'', b'/', b'none', MS_REC | MS_SLAVE, 0)
+  assert 0 == libc.mount(0, b'/', 0, MS_REC | MS_SLAVE, 0)
   assert 0 == libc.umount2(b'/sys', MNT_DETACH)
   assert 0 == libc.mount(namespace, b'/sys', b'sysfs', 0, 0)
 
