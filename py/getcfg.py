@@ -48,7 +48,7 @@ def resolve(src):
     elif url.startswith('ss://'):
       match = re.match(r'ss://(?P<method>[^@]+)@(?P<host>[^:#]+)(:(?P<port>[\d]+))?(#(?P<name>.*))?', url)
       method, host, port, name = match.group('method'), match.group('host'), int(match.group('port')), unquote(match.group('name'))
-      method, password = base64.b64decode(method).decode('utf-8').split(':', 1)
+      method, password = base64.b64decode(method + (4 - (len(method) % 4)) * '=').decode('utf-8').split(':', 1)
       #print('ss', method, password, host, port, name)
       v2ray['outbounds'].append({'name': name, 'protocol': 'shadowsocks', 'settings': {'servers': [{'address': host, 'port': port, 'method': method, 'password': password}]}})
     elif url.startswith('trojan://'):
