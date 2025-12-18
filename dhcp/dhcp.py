@@ -9,68 +9,8 @@ MS_REC = 16384
 MS_SLAVE = 1 << 19
 MNT_DETACH = 2
 
-def route(buf):
-  prefix, mask = buf.split('/', 1)
-  return int(mask).to_bytes() + socket.inet_aton(prefix)[:(int(mask) + 7) // 8]
-
-opts = []
-for arg in sys.argv[1:]:
-  if arg.startswith('-ns='):
-    namespace = arg[len('-ns='):].encode()
-  elif arg.startswith('-eth='):
-    interface = arg[len('-eth='):].encode()
-  elif arg.startswith('-net='):
-    prefix, mask = arg[len('-net='):].split('/', 1)
-    prefix = int.from_bytes(socket.inet_aton(prefix))
-    mask = 32 - int(mask)
-    assert mask <= 32 and mask >= 0
-  elif arg.startswith('-opt='):
-    arg = arg[len('-opt='):]
-    arg = arg.split(',', 1)
-    assert 2 == len(arg)
-    opt, value = arg
-    if '3' == opt:
-      opts.insert(0, (3, socket.inet_aton(value)))
-    elif '6' == opt:
-      opts.insert(0, (6, socket.inet_aton(value)))
-    elif '121' == opt:
-      subnet, gate = value.split(',', 1)
-      opts.insert(0, (121, route(subnet) + socket.inet_aton(gate)))
-
-assert interface is not None
-libc = ctypes.CDLL(None, 0, None, True)
-libc.mount.argtypes, libc.mount.restype = [c_void_p, c_void_p, c_void_p, c_ulong, c_void_p], c_int
-libc.umount2.argtypes, libc.umount2.restype = [c_void_p, c_int], c_int
-
-if namespace is not None:
-  fd = os.open(b'/run/netns/' + namespace, os.O_RDONLY)
-  os.setns(fd, os.CLONE_NEWNET)
-  os.close(fd)
-  os.unshare(os.CLONE_NEWNS)
-  assert 0 == libc.mount(0, b'/', 0, MS_REC | MS_SLAVE, 0)
-  assert 0 == libc.umount2(b'/sys', MNT_DETACH)
-  assert 0 == libc.mount(namespace, b'/sys', b'sysfs', 0, 0)
-
-if not 0 == os.fork():
-  os._exit(0)
-
-fd = os.open('/dev/null', os.O_RDONLY)
-os.dup2(fd, 0)
-os.close(fd)
-fd = os.open('/dev/null', os.O_WRONLY | os.O_TRUNC)
-os.dup2(fd, 1)
-os.dup2(fd, 2)
-os.close(fd)
-os.setsid()
-sock = socket.socket(socket.AF_INET.value, socket.SOCK_DGRAM.value,  socket.IPPROTO_UDP)
-sock.setsockopt(socket.SOL_IP, socket.IP_MTU_DISCOVER, 0)
-sock.setsockopt(socket.SOL_IP, socket.IP_TOS, 192)
-sock.setsockopt(socket.SOL_IP, socket.IP_PKTINFO, 1)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, interface)
-sock.bind(('0.0.0.0', 67))
+SIOCSARP = 0x8955
+ATF_COM = 0x02
 
 class sockaddr(ctypes.Structure):
   _fields_ = [
@@ -115,13 +55,75 @@ class arpreq(ctypes.Structure):
     ret['arp_dev'] = bytes(self.arp_dev).decode()
     return str(ret)
 
-SIOCSARP = 0x8955
-ATF_COM = 0x02
+def route(buf):
+  prefix, mask = buf.split('/', 1)
+  return int(mask).to_bytes() + socket.inet_aton(prefix)[:(int(mask) + 7) // 8]
+
+opts = []
+for arg in sys.argv[1:]:
+  if arg.startswith('-ns='):
+    namespace = arg[len('-ns='):].encode()
+  elif arg.startswith('-eth='):
+    interface = arg[len('-eth='):].encode()
+  elif arg.startswith('-net='):
+    prefix, mask = arg[len('-net='):].split('/', 1)
+    prefix = int.from_bytes(socket.inet_aton(prefix))
+    mask = 32 - int(mask)
+    assert mask <= 32 and mask >= 0
+  elif arg.startswith('-opt='):
+    arg = arg[len('-opt='):]
+    arg = arg.split(',', 1)
+    assert 2 == len(arg)
+    opt, value = arg
+    if '3' == opt:
+      opts.insert(0, (3, socket.inet_aton(value)))
+    elif '6' == opt:
+      opts.insert(0, (6, socket.inet_aton(value)))
+    elif '121' == opt:
+      subnet, gate = value.split(',', 1)
+      opts.insert(0, (121, route(subnet) + socket.inet_aton(gate)))
+
+assert interface is not None and len(interface) < IFNAMSIZ
+libc = ctypes.CDLL(None, use_errno=True)
+libc.mount.argtypes, libc.mount.restype = [c_void_p, c_void_p, c_void_p, c_ulong, c_void_p], c_int
+libc.umount2.argtypes, libc.umount2.restype = [c_void_p, c_int], c_int
+
+if namespace is not None:
+  fd = os.open(b'/run/netns/' + namespace, os.O_RDONLY)
+  os.setns(fd, os.CLONE_NEWNET)
+  os.close(fd)
+  os.unshare(os.CLONE_NEWNS)
+  assert 0 == libc.mount(0, b'/', 0, MS_REC | MS_SLAVE, 0)
+  assert 0 == libc.umount2(b'/sys', MNT_DETACH)
+  assert 0 == libc.mount(namespace, b'/sys', b'sysfs', 0, 0)
+
+if not 0 == os.fork():
+  os._exit(0)
+
+fd = os.open('/dev/null', os.O_RDONLY)
+os.dup2(fd, 0)
+os.close(fd)
+fd = os.open('/dev/null', os.O_WRONLY | os.O_TRUNC)
+os.dup2(fd, 1)
+os.dup2(fd, 2)
+os.close(fd)
+os.setsid()
+sock = socket.socket(socket.AF_INET.value, socket.SOCK_DGRAM.value,  socket.IPPROTO_UDP)
+sock.setsockopt(socket.SOL_IP, socket.IP_MTU_DISCOVER, 0)
+sock.setsockopt(socket.SOL_IP, socket.IP_TOS, 192)
+sock.setsockopt(socket.SOL_IP, socket.IP_PKTINFO, 1)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, interface)
+sock.bind(('0.0.0.0', 67))
+
 arp_req = arpreq()
 arp_req.arp_flags = ATF_COM
 arp_req.arp_pa.sa_family = socket.AF_INET.value
 arp_req.arp_ha.sa_family = 1
-ctypes.memmove(arp_req.arp_dev, interface, ctypes.sizeof(arp_req.arp_dev))
+ctypes.memset(arp_req.arp_dev, 0, IFNAMSIZ)
+ctypes.memmove(arp_req.arp_dev, interface, len(interface))
 while True:
   data, anc, flags, addr = sock.recvmsg(2048, 2048, 0)
   obj = dpkt.dhcp.DHCP(data)
