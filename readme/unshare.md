@@ -67,6 +67,10 @@ For more details see unshare(1).
 
 上面说了使用-U和-r参数。这两个参数是对user命名空间的使用和配置。unshare程序会写入/proc/self/setgroups /proc/self/uid_map /proc/self/gid_map对uid gid进行映射到0，也就是root。映射后程序调用getuid会认为自身是root用户，使用id命令可以看到uid和gid都是0。但内核进行权限检查时仍然按照真实uid和gid进行检查，不会违反传统linux权限控制。
 
+#### 实现
+
+如果对unshare命令实现有兴趣可以参考本项目py/ns.py
+
 ### 具体操作
 
 unshare -m -U -r --propagation slave csh进入新的命令行。所有相关操作在这个csh下执行才生效。
