@@ -28,7 +28,10 @@
       },
       "streamSettings": {
         "network": "tcp",
-        "security": "tls"
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": true
+        }
       }
     }
   ]
