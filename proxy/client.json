@@ -1,0 +1,35 @@
+{
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 9080,
+      "protocol": "socks",
+      "settings": {
+        "udp": false
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "127.0.0.1",
+            "port": 8443,
+            "users": [
+              {
+                "id": "11111111-1111-1111-1111-111111111111",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls"
+      }
+    }
+  ]
+}
