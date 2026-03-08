@@ -78,7 +78,6 @@
         "inboundTag": ["in0"],
         "outboundTag": "out0"
       },
-
       {
         "type": "field",
         "inboundTag": ["in1"],
